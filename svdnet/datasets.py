@@ -20,15 +20,18 @@ class Market_1501(Dataset):
         images.append(torchvision.io.read_image(img_path) / 255)
       self.imgs = torch.stack(tuple(images), dim=0)
 
-    self.class_count = max(self._get_class_from_str(os.path.basename(img_name)) 
-                                                for img_name in self.items) + 1
+    all_labels = sorted(set(self._get_class_from_str(os.path.basename(img_name)) 
+                                                for img_name in self.items))
+    self.map_orig_to_trunc = {val:i for i, val in enumerate(all_labels)}
+    self.map_trunc_to_orig = {i:val for i, val in enumerate(all_labels)}
+    self.class_count = len(self.map_trunc_to_orig)
   
   def __len__(self):
     return len(self.items)
 
   @staticmethod
   def _get_class_from_str(filename):
-    return int(filename[:4]) - 1
+    return int(filename[:4])
   
   def __getitem__(self, idx):
     img_name = os.path.basename(self.items[idx])
@@ -37,4 +40,4 @@ class Market_1501(Dataset):
     img = self.imgs[idx] if self.preload_img else torchvision.io.read_image(img_path) / 255
     img_class = self._get_class_from_str(img_name)
 
-    return img, img_class
+    return img, self.map_orig_to_trunc[img_class]

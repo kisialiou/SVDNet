@@ -22,7 +22,7 @@ class SVDNet(torch.nn.Module):
     if self.training:
       x = self.backbone(x)
       x = self.fc(x)
-      res = F.softmax(x, dim=0)
+      res = F.softmax(x, dim=1)
     else:
       res = self.backbone(x)
     

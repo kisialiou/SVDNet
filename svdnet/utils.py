@@ -20,7 +20,6 @@ def load_train_model(model, optimizer, checkpoint_path):
 
   return ckpt["epoch"]
 
-
 def load_latest_train_model(model, optimizer, save_dir, tag):
   epochs = [int(re.findall(".*{_tag}_(\d+)\.tar".format(_tag=tag), c)[0])
                     for c in glob.glob(os.path.join(save_dir, tag) + "_*.tar")]
@@ -42,20 +41,31 @@ def train_model(model, dataloader, optimizer, ckpt_dir, start_epoch=0, epochs_nu
   model.to("cuda:0")
 
   for epoch in range(start_epoch, epochs_num):
+    losses = []
+    accs = []
     for batch_idx, (data, target) in enumerate(dataloader):
       optimizer.zero_grad()
       data = data.to("cuda:0")
       target = target.to("cuda:0")
       predict = model(data)
-      loss = F.nll_loss(predict, target)
+      loss = F.cross_entropy(predict, target)
       loss.backward()
       optimizer.step()
+      losses.append(loss.item())
+      curr_acc = (predict.argmax(dim=1) == target).sum() / target.shape[0]
+      accs.append(curr_acc)
 
-      if (batch_idx % 1000) == 0:
-        print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+      if (batch_idx % 100) == 0:
+        print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\tAcc: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(dataloader.dataset),
-                100. * batch_idx / len(dataloader), loss.item()))
-      
+                100. * batch_idx / len(dataloader), loss.item(), curr_acc))
+    
+    print(f"AVG Loss after epoch {epoch + 1}: {sum(losses) / len(losses)}")
+    print(f"AVG Acc after epoch {epoch + 1}: {sum(accs) / len(accs)}")
     if (epoch % 2 == 0):
       print(f"Saving checkpoint after {epoch + 1} epochs")
       save_train_model(model, optimizer, epoch + 1, ckpt_dir, "step0")
+    
+    if epoch in [20, 30, 40, 50]:
+      for g in optimizer.param_groups:
+        g['lr'] /= 2
