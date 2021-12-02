@@ -14,9 +14,9 @@ def save_train_model(model, optimizer, epoch, save_dir, tag):
   }, os.path.join(save_dir, f"{tag}_{epoch}.tar"))
 
 
-def load_train_model(model, checkpoint_path):
+def load_model(model, checkpoint_path):
   ckpt = torch.load(checkpoint_path)
-  model.load_state_dict(ckpt["model_state_dict"])
+  model.load_state_dict(ckpt["model_state_dict"], strict=False)
 
   return ckpt["epoch"]
 
@@ -30,7 +30,7 @@ def load_latest_train_model(model, save_dir, tag):
   max_epoch = max(int(re.findall(".*{_tag}_(\d+)\.tar".format(_tag=tag), c)[0])
                     for c in glob.glob(os.path.join(save_dir, tag) + "_*.tar"))
   
-  return load_train_model(model,
+  return load_model(model,
                           os.path.join(save_dir, f"{tag}_{max_epoch}.tar"))
 
 
