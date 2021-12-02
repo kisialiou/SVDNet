@@ -9,7 +9,7 @@ class SVDNet(torch.nn.Module):
 
   def __init__(self, out_classes, eigen_out_feats=1024):
     super().__init__()
-    self.backbone = torchvision.models.resnet50(pretrained=True)
+    self.backbone = torchvision.models.resnet50(pretrained=True, progress=False)
 
     self.backbone.fc = torch.nn.Linear(in_features=self.backbone.fc.in_features,
                                        out_features=eigen_out_feats,
@@ -32,7 +32,9 @@ class SVDNet(torch.nn.Module):
     with torch.no_grad():
       # When full_matrices=False U - is left orhogonal, i.e. it has orthogonal columns
       U, S, _ = torch.linalg.svd(self.backbone.fc.weight.T.data, full_matrices=False)
+      curr_device = self.backbone.fc.weight.device 
       self.backbone.fc.weight.data = (U @ torch.diag(S)).T
+      self.backbone.fc.weight.to(curr_device)
   
   def restraint(self):
     self.backbone.fc.weight.requires_grad = False
