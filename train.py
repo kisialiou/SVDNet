@@ -11,7 +11,7 @@ sys.path.append("../")
 
 from svdnet.models import SVDNet
 from svdnet.datasets import Market_1501
-from svdnet.utils import load_latest_train_model, train_model_step0, train_rri
+from svdnet.utils import load_latest_train_model, train_model_step0, train_rri, train_more_no_rri
 
 
 TRAIN_DIR = "../Market-1501-v15.09.15/bounding_box_train/"

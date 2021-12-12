@@ -95,9 +95,22 @@ def train_rri(model, dataloader, optimizer, ckpt_dir, rri_start=0, rri_count=7, 
   for rri in range(rri_start, rri_count):
     load_optimizer_dict(optimizer, init_state_dict)
 
-    print(f"RRI: {rri}")
+    print(f"\n\n-----------RRI: {rri}-----------")
     model.decorrelate()
     model.restraint()
     train_model_step0(model, dataloader, optimizer, ckpt_dir, f"rri_{rri}_restraint", epochs_num=rri_epochs)
     model.relaxation()
+    print(f"\n-----------RRI: {rri}. Relaxation-----------")
     train_model_step0(model, dataloader, optimizer, ckpt_dir, f"rri_{rri}_relax", epochs_num=rri_epochs)
+
+
+def train_more_no_rri(model, dataloader, optimizer, ckpt_dir, rri_start=0, rri_count=7, rri_epochs=20):
+  init_state_dict = optimizer.state_dict()
+
+  for rri in range(rri_start, rri_count):
+    load_optimizer_dict(optimizer, init_state_dict)
+
+    print(f"\n\n-----------No RRI: {rri}-----------")
+    train_model_step0(model, dataloader, optimizer, ckpt_dir, f"more_no_rri_{rri}_restraint", epochs_num=rri_epochs)
+    print(f"\n-----------No RRI: {rri}. Relaxation-----------")
+    train_model_step0(model, dataloader, optimizer, ckpt_dir, f"more_no_rri_{rri}_relax", epochs_num=rri_epochs)
